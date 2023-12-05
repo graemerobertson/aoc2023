@@ -96,7 +96,7 @@ pub(crate) fn day03() {
                 }
 
                 if *part == '*' && adjacent_part_numbers.len() == 2 {
-                    part2_sum += adjacent_part_numbers.iter().fold(1, |acc, x| acc * x);
+                    part2_sum += adjacent_part_numbers.iter().product::<u32>();
                 }
                 for part in adjacent_part_numbers {
                     part1_part_numbers.push(part);
