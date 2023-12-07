@@ -123,7 +123,7 @@ pub(crate) fn day07() {
         .collect::<Vec<Hand>>();
     part1_hands.sort_by(cmp_hands);
     println!(
-        "Day 1 part 1: {}",
+        "Day 7 part 1: {}",
         part1_hands
             .iter()
             .enumerate()
@@ -136,7 +136,7 @@ pub(crate) fn day07() {
         .collect::<Vec<Hand>>();
     part2_hands.sort_by(cmp_hands);
     println!(
-        "Day 1 part 2: {}",
+        "Day 7 part 2: {}",
         part2_hands
             .iter()
             .enumerate()
