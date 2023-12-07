@@ -5,13 +5,13 @@ pub struct Race {
 
 impl Race {
     pub fn number_of_winning_options(&self) -> u64 {
-        let mut count: u64 = 0;
         for time_spent_charging in 1..self.time {
             if (self.time - time_spent_charging) * time_spent_charging > self.record {
-                count += 1;
+                // The winning options are obviously a symmetrical contiguous range
+                return self.time - 2 * time_spent_charging + 1;
             }
         }
-        count
+        0
     }
 }
 
