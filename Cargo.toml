@@ -5,4 +5,5 @@ authors = ["Graeme Robertson <grobertson@microsoft.com>"]
 edition = "2021"
 
 [dependencies]
+num-integer = "0.1.45"
 structopt = "0.3.26"
