@@ -99,27 +99,27 @@ pub(crate) fn day10() {
                     if directions_set.contains(&Direction::Up)
                         && directions_set.contains(&Direction::Down)
                     {
-                        grid.insert(start.clone(), '|');
+                        grid.insert(start, '|');
                     } else if directions_set.contains(&Direction::Left)
                         && directions_set.contains(&Direction::Right)
                     {
-                        grid.insert(start.clone(), '-');
+                        grid.insert(start, '-');
                     } else if directions_set.contains(&Direction::Down)
                         && directions_set.contains(&Direction::Left)
                     {
-                        grid.insert(start.clone(), 'L');
+                        grid.insert(start, 'L');
                     } else if directions_set.contains(&Direction::Down)
                         && directions_set.contains(&Direction::Right)
                     {
-                        grid.insert(start.clone(), 'J');
+                        grid.insert(start, 'J');
                     } else if directions_set.contains(&Direction::Up)
                         && directions_set.contains(&Direction::Left)
                     {
-                        grid.insert(start.clone(), 'F');
+                        grid.insert(start, 'F');
                     } else if directions_set.contains(&Direction::Up)
                         && directions_set.contains(&Direction::Right)
                     {
-                        grid.insert(start.clone(), '7');
+                        grid.insert(start, '7');
                     }
 
                     // For each point in the grid, count the number of times we have to cross the

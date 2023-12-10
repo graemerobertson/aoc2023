@@ -85,7 +85,7 @@ pub(crate) fn day05() {
     }
 
     let mut part1_locations: Vec<u64> = vec![];
-    for seed in part1_seeds.clone() {
+    for seed in part1_seeds {
         let mut final_location = seed;
         for mapping in &mappings {
             for inner_mapping in mapping {
