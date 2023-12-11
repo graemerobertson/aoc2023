@@ -38,20 +38,20 @@ pub(crate) fn day10() {
     // Figure out the initial set of points a path could start from
     let mut plausible_start_neighbours: HashMap<Coord, Direction> = HashMap::new();
     let up_connector: Option<Coord> = get_up_connector(&start, &grid);
-    if up_connector.is_some() {
-        plausible_start_neighbours.insert(up_connector.unwrap(), Direction::Down);
+    if let Some(up_connector) = up_connector {
+        plausible_start_neighbours.insert(up_connector, Direction::Down);
     }
     let down_connector: Option<Coord> = get_down_connector(&start, &grid);
-    if down_connector.is_some() {
-        plausible_start_neighbours.insert(down_connector.unwrap(), Direction::Up);
+    if let Some(down_connector) = down_connector {
+        plausible_start_neighbours.insert(down_connector, Direction::Up);
     }
     let left_connector: Option<Coord> = get_left_connector(&start, &grid);
-    if left_connector.is_some() {
-        plausible_start_neighbours.insert(left_connector.unwrap(), Direction::Right);
+    if let Some(left_connector) = left_connector {
+        plausible_start_neighbours.insert(left_connector, Direction::Right);
     }
     let right_connector: Option<Coord> = get_right_connector(&start, &grid);
-    if right_connector.is_some() {
-        plausible_start_neighbours.insert(right_connector.unwrap(), Direction::Left);
+    if let Some(right_connector) = right_connector {
+        plausible_start_neighbours.insert(right_connector, Direction::Left);
     }
 
     // For each of the plausible start points, try to find a path that connects back to the start.
@@ -63,17 +63,14 @@ pub(crate) fn day10() {
         let mut next_point_in_path: Coord = start_neighbour.clone();
         // We track which direction we came from, so we don't go back the way we came.
         let mut next_prev_direction = plausible_start_neighbours
-            .get(&start_neighbour)
+            .get(start_neighbour)
             .unwrap()
             .clone();
         loop {
             let (connector, prev_direction): (Option<Coord>, Direction) =
                 get_connecting_point(&next_point_in_path, &grid, &next_prev_direction);
-            if connector.is_none() {
-                // We've hit a dead end, move on to the next potential path.
-                continue 'outer;
-            } else {
-                next_point_in_path = connector.unwrap();
+            if let Some(connector) = connector {
+                next_point_in_path = connector;
                 next_prev_direction = prev_direction.clone();
 
                 if path.contains(&next_point_in_path) {
@@ -95,7 +92,7 @@ pub(crate) fn day10() {
                     );
                     directions_set.insert(
                         plausible_start_neighbours
-                            .get(&start_neighbour)
+                            .get(start_neighbour)
                             .unwrap()
                             .clone(),
                     );
@@ -131,10 +128,7 @@ pub(crate) fn day10() {
                     for row in 0..height {
                         for col in 0..width {
                             let mut number_of_boundaries_crossed = 0;
-                            if !path.contains(&Coord {
-                                row: row.try_into().unwrap(),
-                                col: col.try_into().unwrap(),
-                            }) {
+                            if !path.contains(&Coord { row, col }) {
                                 // Erm... Best not to dwell on this code too much. We need to
                                 // track bends in a way that is both hard for me to think about and
                                 // also apparently hard for me to code.
@@ -143,16 +137,8 @@ pub(crate) fn day10() {
                                 let mut found_7: usize = 0;
                                 let mut found_j: usize = 0;
                                 for new_row in 0..row {
-                                    if path.contains(&Coord {
-                                        row: new_row.try_into().unwrap(),
-                                        col: col.try_into().unwrap(),
-                                    }) {
-                                        let point = grid
-                                            .get(&Coord {
-                                                row: new_row.try_into().unwrap(),
-                                                col: col.try_into().unwrap(),
-                                            })
-                                            .unwrap();
+                                    if path.contains(&Coord { row: new_row, col }) {
+                                        let point = grid.get(&Coord { row: new_row, col }).unwrap();
                                         if point == &'-' {
                                             number_of_boundaries_crossed += 1;
                                         } else if point == &'F' {
@@ -195,6 +181,9 @@ pub(crate) fn day10() {
                     println!("Day 10 part 2: {}", number_of_points_inside_path);
                     return;
                 }
+            } else {
+                // We've hit a dead end, move on to the next potential path.
+                continue 'outer;
             }
         }
     }
@@ -238,7 +227,7 @@ pub fn get_up_connector(coord: &Coord, grid: &HashMap<Coord, char>) -> Option<Co
         row: coord.row - 1,
         col: coord.col,
     };
-    if check_point_connects(&up_coord, grid, &vec!['|', '7', 'F']) {
+    if check_point_connects(&up_coord, grid, &['|', '7', 'F']) {
         return Some(up_coord);
     }
     None
@@ -249,7 +238,7 @@ pub fn get_down_connector(coord: &Coord, grid: &HashMap<Coord, char>) -> Option<
         row: coord.row + 1,
         col: coord.col,
     };
-    if check_point_connects(&down_coord, grid, &vec!['|', 'J', 'L']) {
+    if check_point_connects(&down_coord, grid, &['|', 'J', 'L']) {
         return Some(down_coord);
     }
     None
@@ -260,7 +249,7 @@ pub fn get_left_connector(coord: &Coord, grid: &HashMap<Coord, char>) -> Option<
         row: coord.row,
         col: coord.col - 1,
     };
-    if check_point_connects(&left_coord, grid, &vec!['-', 'F', 'L']) {
+    if check_point_connects(&left_coord, grid, &['-', 'F', 'L']) {
         return Some(left_coord);
     }
     None
@@ -271,7 +260,7 @@ pub fn get_right_connector(coord: &Coord, grid: &HashMap<Coord, char>) -> Option
         row: coord.row,
         col: coord.col + 1,
     };
-    if check_point_connects(&right_coord, grid, &vec!['-', '7', 'J']) {
+    if check_point_connects(&right_coord, grid, &['-', '7', 'J']) {
         return Some(right_coord);
     }
     None
@@ -280,7 +269,7 @@ pub fn get_right_connector(coord: &Coord, grid: &HashMap<Coord, char>) -> Option
 pub fn check_point_connects(
     coord: &Coord,
     grid: &HashMap<Coord, char>,
-    match_list: &Vec<char>,
+    match_list: &[char],
 ) -> bool {
     if match_list.contains(grid.get(coord).unwrap_or(&'.')) {
         return true;

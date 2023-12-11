@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 
-fn find_next_number(sequence: &Vec<i32>) -> i32 {
+fn find_next_number(sequence: &[i32]) -> i32 {
     let differences = sequence
         .windows(2)
         .map(|window| window[1] - window[0])
@@ -25,7 +25,7 @@ pub(crate) fn day09() {
             .map(|x| x.parse::<i32>().unwrap())
             .collect();
         next_number_sum += find_next_number(&sequence);
-        previous_number_sum += find_next_number(&sequence.into_iter().rev().collect());
+        previous_number_sum += find_next_number(&sequence.into_iter().rev().collect::<Vec<i32>>());
     }
     println!("Day 9 part 1: {}", next_number_sum);
     println!("Day 9 part 2: {}", previous_number_sum);
