@@ -8,18 +8,28 @@ pub enum Point {
     Empty,
 }
 
-fn expand_universe(base_universe: &Vec<Vec<Point>>, expansion_factor: usize) -> Vec<Vec<Point>> {
-    let len = base_universe[0].len();
-    let mut half_expanded_universe: Vec<Vec<Point>> = vec![];
+fn expand_rows_in_universe(
+    base_universe: &Vec<Vec<Point>>,
+    expansion_factor: usize,
+) -> Vec<Vec<Point>> {
+    let mut expanded_universe: Vec<Vec<Point>> = vec![];
     for line in base_universe {
-        half_expanded_universe.push(line.clone());
+        expanded_universe.push(line.clone());
         if line.iter().all(|x| matches!(x, Point::Empty)) {
             for _ in 0..expansion_factor {
-                half_expanded_universe.push(line.clone());
+                expanded_universe.push(line.clone());
             }
         }
     }
+    expanded_universe
+}
 
+fn expand_universe(base_universe: &Vec<Vec<Point>>, expansion_factor: usize) -> Vec<Vec<Point>> {
+    let len = base_universe[0].len();
+    let mut half_expanded_universe: Vec<Vec<Point>> =
+        expand_rows_in_universe(base_universe, expansion_factor);
+
+    // Transpose universe.
     let mut iters: Vec<_> = half_expanded_universe
         .into_iter()
         .map(|n| n.into_iter())
@@ -33,17 +43,7 @@ fn expand_universe(base_universe: &Vec<Vec<Point>>, expansion_factor: usize) -> 
         })
         .collect();
 
-    let mut expanded_universe: Vec<Vec<Point>> = vec![];
-    for line in half_expanded_universe {
-        expanded_universe.push(line.clone());
-        if line.iter().all(|x| matches!(x, Point::Empty)) {
-            for _ in 0..expansion_factor {
-                expanded_universe.push(line.clone());
-            }
-        }
-    }
-
-    expanded_universe
+    expand_rows_in_universe(&half_expanded_universe, expansion_factor)
 }
 
 fn find_galaxies(universe: &[Vec<Point>]) -> HashSet<(usize, usize)> {
@@ -101,6 +101,6 @@ pub(crate) fn day11() {
     let twice_expanded_distances: isize = count_distances(&twice_expanded_galaxies);
     println!(
         "Day 11 part 2: {}",
-        ((twice_expanded_distances - once_expanded_distances) * 999998)
+        (once_expanded_distances + (twice_expanded_distances - once_expanded_distances) * 999998)
     );
 }
