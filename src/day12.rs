@@ -2,15 +2,13 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 
-fn count_possibilities(
-    row: &[char],
-    arrangement: &[u64],
-    known_dot_distributions: &mut HashMap<(Vec<char>, Vec<u64>), usize>,
-) -> usize {
+type Cache = HashMap<(Vec<char>, Vec<u64>), usize>;
+
+fn count_possibilities(row: &[char], arrangement: &[u64], cache: &mut Cache) -> usize {
     if arrangement.iter().sum::<u64>() as usize + arrangement.len() > row.len() + 1 {
         return 0;
     }
-    if let Some(count) = known_dot_distributions.get(&(row.to_vec(), arrangement.to_vec())) {
+    if let Some(count) = cache.get(&(row.to_vec(), arrangement.to_vec())) {
         return *count;
     }
     let mut count = 0;
@@ -28,7 +26,7 @@ fn count_possibilities(
                         active_run = Some(x - 1);
                     } else {
                         // The run had just ended - and yet here is another spring. Invalid.
-                        known_dot_distributions.insert((row.to_vec(), arrangement.to_vec()), 0);
+                        cache.insert((row.to_vec(), arrangement.to_vec()), 0);
                         return 0;
                     }
                 }
@@ -36,7 +34,7 @@ fn count_possibilities(
                     // We've don't have an active run of springs
                     if remaining_arrangement.is_empty() {
                         // We weren't expecting any more springs! Invalid.
-                        known_dot_distributions.insert((row.to_vec(), arrangement.to_vec()), 0);
+                        cache.insert((row.to_vec(), arrangement.to_vec()), 0);
                         return 0;
                     }
                     active_run = Some(remaining_arrangement.pop().unwrap() - 1);
@@ -47,7 +45,7 @@ fn count_possibilities(
                 // We've got an active run of springs
                 if x > 0 {
                     // And we needed at least one more. Invalid.
-                    known_dot_distributions.insert((row.to_vec(), arrangement.to_vec()), 0);
+                    cache.insert((row.to_vec(), arrangement.to_vec()), 0);
                     return 0;
                 } else {
                     // And that run has now ended.
@@ -58,7 +56,7 @@ fn count_possibilities(
                 > remaining_row.len() + 1
             {
                 // We've used another dot and now we've run out of space for everything else. Invalid.
-                known_dot_distributions.insert((row.to_vec(), arrangement.to_vec()), 0);
+                cache.insert((row.to_vec(), arrangement.to_vec()), 0);
                 return 0;
             }
         } else if c == &'?' {
@@ -82,9 +80,9 @@ fn count_possibilities(
                         count += count_possibilities(
                             &remaining_row_with_spring,
                             &remaining_arrangement,
-                            known_dot_distributions,
+                            cache,
                         );
-                        known_dot_distributions.insert((row.to_vec(), arrangement.to_vec()), count);
+                        cache.insert((row.to_vec(), arrangement.to_vec()), count);
                         return count;
                     } else {
                         if x == 1 {
@@ -92,18 +90,13 @@ fn count_possibilities(
                             // and the next character needs to not be a spring.
                             let next_c = remaining_row.pop();
                             if next_c == Some('#') {
-                                known_dot_distributions
-                                    .insert((row.to_vec(), arrangement.to_vec()), 0);
+                                cache.insert((row.to_vec(), arrangement.to_vec()), 0);
                                 return 0;
                             }
                         }
 
-                        count += count_possibilities(
-                            &remaining_row,
-                            &remaining_arrangement,
-                            known_dot_distributions,
-                        );
-                        known_dot_distributions.insert((row.to_vec(), arrangement.to_vec()), count);
+                        count += count_possibilities(&remaining_row, &remaining_arrangement, cache);
+                        cache.insert((row.to_vec(), arrangement.to_vec()), count);
                         return count;
                     }
                 }
@@ -113,28 +106,25 @@ fn count_possibilities(
                     count += count_possibilities(
                         &remaining_row_with_empty,
                         &remaining_arrangement,
-                        known_dot_distributions,
+                        cache,
                     );
                     count += count_possibilities(
                         &remaining_row_with_spring,
                         &remaining_arrangement,
-                        known_dot_distributions,
+                        cache,
                     );
-                    known_dot_distributions.insert((row.to_vec(), arrangement.to_vec()), count);
+                    cache.insert((row.to_vec(), arrangement.to_vec()), count);
                     return count;
                 }
             }
         }
     }
     count += 1;
-    known_dot_distributions.insert((row.to_vec(), arrangement.to_vec()), count);
+    cache.insert((row.to_vec(), arrangement.to_vec()), count);
     count
 }
 
-fn process_line(
-    line: &str,
-    known_dot_distributions: &mut HashMap<(Vec<char>, Vec<u64>), usize>,
-) -> usize {
+fn process_line(line: &str, cache: &mut Cache) -> usize {
     let split = line.split_whitespace().collect::<Vec<&str>>();
     let mut row = split[0].to_owned();
     row = row.strip_prefix('.').unwrap_or(&row).to_string();
@@ -147,13 +137,10 @@ fn process_line(
         .split(',')
         .map(|x| x.parse::<u64>().unwrap())
         .collect::<Vec<u64>>();
-    count_possibilities(&row_chars, &arrangement, known_dot_distributions)
+    count_possibilities(&row_chars, &arrangement, cache)
 }
 
-fn process_line_x5(
-    line: &str,
-    known_dot_distributions: &mut HashMap<(Vec<char>, Vec<u64>), usize>,
-) -> usize {
+fn process_line_x5(line: &str, cache: &mut Cache) -> usize {
     let split = line.split_whitespace().collect::<Vec<&str>>();
     let mut row = split[0].to_owned();
     row = format!("{}?{}?{}?{}?{}", row, row, row, row, row);
@@ -171,7 +158,7 @@ fn process_line_x5(
     for _ in 0..4 {
         arrangement.extend(base_arrangement.clone().iter());
     }
-    count_possibilities(&row_chars, &arrangement, known_dot_distributions)
+    count_possibilities(&row_chars, &arrangement, cache)
 }
 
 pub(crate) fn day12() {
@@ -180,10 +167,10 @@ pub(crate) fn day12() {
     let lines = reader.lines().collect::<io::Result<Vec<String>>>().unwrap();
     let mut part1_sum: usize = 0;
     let mut part2_sum: usize = 0;
-    let mut known_dot_distributions: HashMap<(Vec<char>, Vec<u64>), usize> = HashMap::new();
+    let mut cache: Cache = HashMap::new();
     for line in lines {
-        part1_sum += process_line(&line, &mut known_dot_distributions);
-        part2_sum += process_line_x5(&line, &mut known_dot_distributions);
+        part1_sum += process_line(&line, &mut cache);
+        part2_sum += process_line_x5(&line, &mut cache);
     }
     println!("Day 12 part 1: {}", part1_sum);
     println!("Day 12 part 2: {}", part2_sum);
