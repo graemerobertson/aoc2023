@@ -86,17 +86,16 @@ fn perform_cycle(grid: &mut HashMap<(usize, usize), Rock>, height: usize, width:
 fn calculate_total_load_on_the_north_support_beams(
     grid: &HashMap<(usize, usize), Rock>,
     height: usize,
-    width: usize,
 ) -> usize {
-    let mut sum = 0;
-    for row in 0..height {
-        for col in 0..width {
-            if grid.get(&(row, col)) == Some(&Rock::RoundRock) {
-                sum += height - row;
+    grid.iter()
+        .filter_map(|(key, val)| {
+            if val == &Rock::RoundRock {
+                Some(height - key.0)
+            } else {
+                None
             }
-        }
-    }
-    sum
+        })
+        .sum::<usize>()
 }
 
 fn _print_grid(grid: &HashMap<(usize, usize), Rock>, height: usize, width: usize) {
@@ -141,7 +140,7 @@ pub(crate) fn day14() {
     tilt_north(&mut part1_grid, height, width);
     println!(
         "Day 14 part 1: {}",
-        calculate_total_load_on_the_north_support_beams(&part1_grid, height, width)
+        calculate_total_load_on_the_north_support_beams(&part1_grid, height)
     );
 
     // Let's find a loop.
@@ -161,15 +160,15 @@ pub(crate) fn day14() {
             // without going past 1000000000.
             let previous_iteration = previous_states.get(&keys).unwrap();
             let cycle_length = current_iteration - previous_iteration;
-            let skip_to = cycle_length * ((1000000000 - current_iteration) / cycle_length)
+            let skip_to = cycle_length * ((1_000_000_000 - current_iteration) / cycle_length)
                 + current_iteration;
             // Now loop until 1000000000 iterations.
-            for _ in skip_to..1000000000 {
+            for _ in skip_to..1_000_000_000 {
                 perform_cycle(&mut grid, height, width);
             }
             println!(
                 "Day 14 part 2: {}",
-                calculate_total_load_on_the_north_support_beams(&grid, height, width)
+                calculate_total_load_on_the_north_support_beams(&grid, height)
             );
             break;
         }
