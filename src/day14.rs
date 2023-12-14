@@ -8,127 +8,79 @@ pub enum Rock {
     SquareRock,
 }
 
-fn tilt_north(
-    grid: &HashMap<(usize, usize), Rock>,
-    height: usize,
-    width: usize,
-) -> HashMap<(usize, usize), Rock> {
-    let mut new_grid: HashMap<(usize, usize), Rock> = HashMap::new();
+fn tilt_north(grid: &mut HashMap<(usize, usize), Rock>, height: usize, width: usize) {
     for row in 0..height {
         for col in 0..width {
-            match grid.get(&(row, col)) {
-                Some(Rock::RoundRock) => {
-                    let mut new_row = 0;
-                    for previous_row in 0..row {
-                        if new_grid.get(&(previous_row, col)).is_some() {
-                            new_row = previous_row + 1;
-                        }
+            if grid.get(&(row, col)) == Some(&Rock::RoundRock) {
+                let mut new_row = 0;
+                for previous_row in 0..row {
+                    if grid.get(&(previous_row, col)).is_some() {
+                        new_row = previous_row + 1;
                     }
-                    new_grid.insert((new_row, col), Rock::RoundRock);
                 }
-                Some(c) => {
-                    new_grid.insert((row, col), c.clone());
-                }
-                None => (),
+                grid.remove(&(row, col));
+                grid.insert((new_row, col), Rock::RoundRock);
             }
         }
     }
-    new_grid
 }
 
-fn tilt_west(
-    grid: &HashMap<(usize, usize), Rock>,
-    height: usize,
-    width: usize,
-) -> HashMap<(usize, usize), Rock> {
-    let mut new_grid: HashMap<(usize, usize), Rock> = HashMap::new();
+fn tilt_west(grid: &mut HashMap<(usize, usize), Rock>, height: usize, width: usize) {
     for row in 0..height {
         for col in 0..width {
-            match grid.get(&(row, col)) {
-                Some(Rock::RoundRock) => {
-                    let mut new_col = 0;
-                    for previous_col in 0..col {
-                        if new_grid.get(&(row, previous_col)).is_some() {
-                            new_col = previous_col + 1;
-                        }
+            if grid.get(&(row, col)) == Some(&Rock::RoundRock) {
+                let mut new_col = 0;
+                for previous_col in 0..col {
+                    if grid.get(&(row, previous_col)).is_some() {
+                        new_col = previous_col + 1;
                     }
-                    new_grid.insert((row, new_col), Rock::RoundRock);
                 }
-                Some(c) => {
-                    new_grid.insert((row, col), c.clone());
-                }
-                None => (),
+                grid.remove(&(row, col));
+                grid.insert((row, new_col), Rock::RoundRock);
             }
         }
     }
-    new_grid
 }
 
-fn tilt_east(
-    grid: &HashMap<(usize, usize), Rock>,
-    height: usize,
-    width: usize,
-) -> HashMap<(usize, usize), Rock> {
-    let mut new_grid: HashMap<(usize, usize), Rock> = HashMap::new();
+fn tilt_east(grid: &mut HashMap<(usize, usize), Rock>, height: usize, width: usize) {
     for row in 0..height {
         for col in (0..width).rev() {
-            match grid.get(&(row, col)) {
-                Some(Rock::RoundRock) => {
-                    let mut new_col = width - 1;
-                    for previous_col in (col + 1..width).rev() {
-                        if new_grid.get(&(row, previous_col)).is_some() {
-                            new_col = previous_col - 1;
-                        }
+            if grid.get(&(row, col)) == Some(&Rock::RoundRock) {
+                let mut new_col = width - 1;
+                for previous_col in (col + 1..width).rev() {
+                    if grid.get(&(row, previous_col)).is_some() {
+                        new_col = previous_col - 1;
                     }
-                    new_grid.insert((row, new_col), Rock::RoundRock);
                 }
-                Some(c) => {
-                    new_grid.insert((row, col), c.clone());
-                }
-                None => (),
+                grid.remove(&(row, col));
+                grid.insert((row, new_col), Rock::RoundRock);
             }
         }
     }
-    new_grid
 }
 
-fn tilt_south(
-    grid: &HashMap<(usize, usize), Rock>,
-    height: usize,
-    width: usize,
-) -> HashMap<(usize, usize), Rock> {
-    let mut new_grid: HashMap<(usize, usize), Rock> = HashMap::new();
+fn tilt_south(grid: &mut HashMap<(usize, usize), Rock>, height: usize, width: usize) {
     for row in (0..height).rev() {
         for col in 0..width {
-            match grid.get(&(row, col)) {
-                Some(Rock::RoundRock) => {
-                    let mut new_row = height - 1;
-                    for previous_row in (row + 1..height).rev() {
-                        if new_grid.get(&(previous_row, col)).is_some() {
-                            new_row = previous_row - 1;
-                        }
+            if grid.get(&(row, col)) == Some(&Rock::RoundRock) {
+                let mut new_row = height - 1;
+                for previous_row in (row + 1..height).rev() {
+                    if grid.get(&(previous_row, col)).is_some() {
+                        new_row = previous_row - 1;
                     }
-                    new_grid.insert((new_row, col), Rock::RoundRock);
                 }
-                Some(c) => {
-                    new_grid.insert((row, col), c.clone());
-                }
-                None => (),
+                grid.remove(&(row, col));
+                grid.insert((new_row, col), Rock::RoundRock);
             }
         }
     }
-    new_grid
 }
 
-fn perform_cycle(
-    grid: &HashMap<(usize, usize), Rock>,
-    height: usize,
-    width: usize,
-) -> HashMap<(usize, usize), Rock> {
-    let mut new_grid = tilt_north(grid, height, width);
-    new_grid = tilt_west(&new_grid, height, width);
-    new_grid = tilt_south(&new_grid, height, width);
-    tilt_east(&new_grid, height, width)
+fn perform_cycle(grid: &mut HashMap<(usize, usize), Rock>, height: usize, width: usize) {
+    tilt_north(grid, height, width);
+    tilt_west(grid, height, width);
+    tilt_south(grid, height, width);
+    tilt_east(grid, height, width);
 }
 
 fn calculate_total_load_on_the_north_support_beams(
@@ -185,7 +137,8 @@ pub(crate) fn day14() {
         }
     }
 
-    let part1_grid = tilt_north(&grid, height, width);
+    let mut part1_grid = grid.clone();
+    tilt_north(&mut part1_grid, height, width);
     println!(
         "Day 14 part 1: {}",
         calculate_total_load_on_the_north_support_beams(&part1_grid, height, width)
@@ -196,7 +149,7 @@ pub(crate) fn day14() {
     let mut current_iteration = 0;
     loop {
         current_iteration += 1;
-        grid = perform_cycle(&grid, height, width);
+        perform_cycle(&mut grid, height, width);
         let mut keys = grid
             .keys()
             .cloned()
@@ -212,7 +165,7 @@ pub(crate) fn day14() {
                 + current_iteration;
             // Now loop until 1000000000 iterations.
             for _ in skip_to..1000000000 {
-                grid = perform_cycle(&grid, height, width);
+                perform_cycle(&mut grid, height, width);
             }
             println!(
                 "Day 14 part 2: {}",
