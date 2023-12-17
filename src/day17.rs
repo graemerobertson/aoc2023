@@ -91,8 +91,6 @@ fn shortest_path(
         distance_travelled_in_stright_line: 0,
     });
 
-    let mut best_costs: Vec<usize> = vec![];
-
     // Examine the frontier with lower cost nodes first (min-heap)
     while let Some(State {
         cost,
@@ -102,11 +100,8 @@ fn shortest_path(
     }) = heap.pop()
     {
         if position == goal {
-            // We've reached our goal, but I _think_ we might still have better paths available
-            // on our heap due to the straight line constraints. Not sure... Either way, there's
-            // little harm in processing the rest of the existing heap.
             if distance_travelled_in_stright_line >= straight_line_constraints.0 {
-                best_costs.push(cost);
+                return Some(cost);
             }
             continue;
         }
@@ -171,10 +166,6 @@ fn shortest_path(
                     .unwrap() = next.cost;
             }
         }
-    }
-
-    if !best_costs.is_empty() {
-        return Some(*best_costs.iter().min().unwrap());
     }
 
     // Goal not reachable
