@@ -181,8 +181,7 @@ pub(crate) fn day19() {
                 &p.replace("x=", "\"x\":")
                     .replace("m=", "\"m\":")
                     .replace("a=", "\"a\":")
-                    .replace("s=", "\"s\":")
-                    .to_owned(),
+                    .replace("s=", "\"s\":"),
             )
             .unwrap()
         })
