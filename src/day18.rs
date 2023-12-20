@@ -19,28 +19,48 @@ fn in_path(path: &HashSet<Range>, x: isize, y: isize) -> bool {
     false
 }
 
-fn find_path_in_column_y(path: &HashSet<Range>, y: isize) -> Vec<(isize, isize)> {
+// Slightly random function that returns the path instances in column y, and a the number of
+// contiguous columns that are identical to column y, starting at column y and going right.
+//
+// The path instances are returned as a vector of tuples, where the first element is the start
+// of a path instance, and the second element is the end of the path instance.
+fn find_path_in_column_y(path: &HashSet<Range>, y: isize) -> (Vec<(isize, isize)>, isize) {
     let mut path_instances: Vec<(isize, isize)> = Vec::new();
+    let mut max_y_that_looks_identical = isize::MAX;
     for range in path {
         if (y < range.max_y && y > range.min_y) || (y == range.max_y && y == range.min_y) {
+            max_y_that_looks_identical = std::cmp::min(max_y_that_looks_identical, range.max_y);
             path_instances.push((range.min_x, range.max_x));
         }
     }
     path_instances.sort_by(|a, b| a.0.cmp(&b.0));
-    path_instances
+
+    for range in path {
+        if range.min_y == range.max_y
+            && range.min_y > y
+            && range.min_y <= max_y_that_looks_identical
+        {
+            max_y_that_looks_identical = range.min_y - 1;
+        }
+    }
+    if max_y_that_looks_identical == isize::MAX {
+        panic!("No path either in column y, or to the right of column y - what are we doing here?!")
+    }
+    (path_instances, 1 + max_y_that_looks_identical - y)
 }
 
 fn lagoon_interior_volume(path: &HashSet<Range>) -> usize {
     let max_y = path.iter().map(|r| r.max_y).max().unwrap();
     let min_y = path.iter().map(|r| r.min_y).min().unwrap();
     let mut count = 0;
-    for y in min_y..=max_y {
+    let mut it = min_y..=max_y;
+    while let Some(y) = it.next() {
         let mut current_x_index: isize = 0;
         let mut inside: bool = false;
-        let path_instances = find_path_in_column_y(path, y);
+        let (path_instances, number_of_identical_cols) = find_path_in_column_y(path, y);
         for path_instance in path_instances {
             if inside {
-                count += (path_instance.0 - current_x_index) as usize;
+                count += ((path_instance.0 - current_x_index) * number_of_identical_cols) as usize;
             }
             if path_instance.0 == path_instance.1
                 || (in_path(path, path_instance.0, y + 1) && in_path(path, path_instance.1, y - 1))
@@ -49,6 +69,9 @@ fn lagoon_interior_volume(path: &HashSet<Range>) -> usize {
                 inside = !inside;
             }
             current_x_index = path_instance.1 + 1;
+        }
+        if number_of_identical_cols > 1 {
+            it.nth(number_of_identical_cols as usize - 2);
         }
     }
     count
