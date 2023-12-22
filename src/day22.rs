@@ -15,9 +15,8 @@ struct Brick {
     min_z: usize,
 }
 
-// This is really really slow, but it felt very easy to write!
-fn fall(bricks: &Vec<Brick>) -> Vec<Brick> {
-    let mut fallen_bricks: Vec<Brick> = vec![];
+fn fall(bricks: &mut Vec<Brick>) {
+    let mut occupied_cells: HashSet<Cube> = HashSet::new();
     for brick in bricks {
         let mut new_min_z: usize = brick.min_z;
         for z in (1..brick.min_z).rev() {
@@ -30,13 +29,10 @@ fn fall(bricks: &Vec<Brick>) -> Vec<Brick> {
                     z: cube.z - (brick.min_z - z),
                 })
                 .collect::<HashSet<Cube>>();
-            if fallen_bricks
-                .iter()
-                .any(|b| !b.cubes.is_disjoint(&new_set_of_cubes))
-            {
-                break;
-            } else {
+            if occupied_cells.is_disjoint(&new_set_of_cubes) {
                 new_min_z = z;
+            } else {
+                break;
             }
         }
         let new_set_of_cubes = brick
@@ -48,12 +44,10 @@ fn fall(bricks: &Vec<Brick>) -> Vec<Brick> {
                 z: cube.z - (brick.min_z - new_min_z),
             })
             .collect::<HashSet<Cube>>();
-        fallen_bricks.push(Brick {
-            cubes: new_set_of_cubes,
-            min_z: new_min_z,
-        });
+        occupied_cells.extend(new_set_of_cubes.clone());
+        brick.min_z = new_min_z;
+        brick.cubes = new_set_of_cubes;
     }
-    fallen_bricks
 }
 
 pub(crate) fn day22() {
@@ -89,18 +83,19 @@ pub(crate) fn day22() {
         });
     }
     bricks.sort_by_key(|b| b.min_z);
-    let fallen_bricks = fall(&bricks);
+    fall(&mut bricks);
     let mut part1_count: usize = 0;
     let mut part2_count: usize = 0;
-    for i in 0..fallen_bricks.len() {
-        let mut fallen_bricks_without_i = fallen_bricks.clone();
-        fallen_bricks_without_i.remove(i);
-        let new_fallen_bricks = fall(&fallen_bricks_without_i);
-        if new_fallen_bricks == fallen_bricks_without_i {
+    for i in 0..bricks.len() {
+        let mut bricks_without_i = bricks.clone();
+        bricks_without_i.remove(i);
+        let mut fallen_bricks_without_i = bricks_without_i.clone();
+        fall(&mut fallen_bricks_without_i);
+        if fallen_bricks_without_i == bricks_without_i {
             part1_count += 1;
         } else {
-            for j in 0..new_fallen_bricks.len() {
-                if new_fallen_bricks[j] != fallen_bricks_without_i[j] {
+            for j in i..bricks_without_i.len() {
+                if fallen_bricks_without_i[j] != bricks_without_i[j] {
                     part2_count += 1;
                 }
             }
