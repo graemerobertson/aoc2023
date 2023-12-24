@@ -15,9 +15,14 @@ struct Brick {
     min_z: usize,
 }
 
-fn fall(bricks: &mut Vec<Brick>) {
+fn fall_from_i(bricks: &mut [Brick], i: usize) {
     let mut occupied_cells: HashSet<Cube> = HashSet::new();
-    for brick in bricks {
+    for (index, brick) in bricks.iter_mut().enumerate() {
+        if index < i {
+            occupied_cells.extend(brick.cubes.clone());
+            continue;
+        }
+
         let mut new_min_z: usize = brick.min_z;
         for z in (1..brick.min_z).rev() {
             let new_set_of_cubes = brick
@@ -83,14 +88,14 @@ pub(crate) fn day22() {
         });
     }
     bricks.sort_by_key(|b| b.min_z);
-    fall(&mut bricks);
+    fall_from_i(&mut bricks, 0);
     let mut part1_count: usize = 0;
     let mut part2_count: usize = 0;
     for i in 0..bricks.len() {
         let mut bricks_without_i = bricks.clone();
         bricks_without_i.remove(i);
         let mut fallen_bricks_without_i = bricks_without_i.clone();
-        fall(&mut fallen_bricks_without_i);
+        fall_from_i(&mut fallen_bricks_without_i, i);
         if fallen_bricks_without_i == bricks_without_i {
             part1_count += 1;
         } else {
